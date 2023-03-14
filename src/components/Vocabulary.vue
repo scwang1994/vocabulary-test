@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    {{ windowWidth }}
     <v-tabs
       color="cyan"
       next-icon="mdi-menu-right-outline"
@@ -16,7 +17,11 @@
             <v-row align="center" justify="center">
               <v-card-text style="text-align: center">
                 <!-- q -->
-                <span style="font-size: 2em">
+                <span
+                  :style="
+                    windowWidth < 600 ? `font-size: 20px` : `font-size: 32px`
+                  "
+                >
                   {{ testing[i - 1].question.trans }}
                   {{ " (" + testing[i - 1].question.type + ")" }}
                 </span>
@@ -36,7 +41,13 @@
                         @click="next(i - 1, testing[i - 1].options[j - 1])"
                       >
                         <template v-slot:label>
-                          <span style="font-size: 2em">
+                          <span
+                            :style="
+                              windowWidth < 600
+                                ? `font-size: 20px`
+                                : `font-size: 32px`
+                            "
+                          >
                             {{ testing[i - 1].options[j - 1] }}
                           </span>
                         </template>
@@ -68,11 +79,20 @@
 
           <v-list-item v-for="(check_item, index) in check_list" :key="index">
             <v-list-item-content style="text-align: center">
-              <v-list-item-title>{{ check_item.answer }}</v-list-item-title>
+              <v-list-item-title
+                :style="
+                  windowWidth < 600 ? `font-size: 14px` : `font-size: 20px`
+                "
+                >{{ check_item.answer }}</v-list-item-title
+              >
             </v-list-item-content>
 
             <v-list-item-content style="text-align: center">
-              <v-list-item-title>
+              <v-list-item-title
+                :style="
+                  windowWidth < 600 ? `font-size: 14px` : `font-size: 20px`
+                "
+              >
                 {{
                   check_item.question.trans +
                   " (" +
@@ -85,7 +105,47 @@
 
           <v-row align="center" justify="center" class="mt-3 mb-3">
             <v-btn class="mr-3" depressed @click="tryAgain">再練一次</v-btn>
-            <v-btn depressed>回顧一下錯的</v-btn>
+            <v-btn depressed @click="dialogAll = true">回顧一下錯的</v-btn>
+          </v-row>
+        </v-container>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="dialogAll" fullscreen transition="dialog-top-transition">
+      <v-card>
+        <v-container fill-height fluid>
+          <v-list-item
+            v-for="(check_item, index) in check_list_all"
+            :key="index"
+          >
+            <v-list-item-content style="text-align: center">
+              <v-list-item-title
+                :style="
+                  windowWidth < 600 ? `font-size: 14px` : `font-size: 20px`
+                "
+              >
+                {{ check_item.answer }}
+              </v-list-item-title>
+            </v-list-item-content>
+
+            <v-list-item-content style="text-align: center">
+              <v-list-item-title
+                :style="
+                  windowWidth < 600 ? `font-size: 14px` : `font-size: 20px`
+                "
+              >
+                {{
+                  check_item.question.trans +
+                  " (" +
+                  check_item.question.type +
+                  ")"
+                }}
+              </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+
+          <v-row align="center" justify="center" class="mt-3 mb-3">
+            <v-btn class="mr-3" depressed @click="tryAgain">再練一次</v-btn>
           </v-row>
         </v-container>
       </v-card>
@@ -102,6 +162,7 @@ export default {
   data: () => ({
     active: 0,
     dialog: false,
+    dialogAll: false,
 
     vocabulary: Vocabulary,
     testing: [],
@@ -110,7 +171,11 @@ export default {
     score: 0,
     check_list: [],
     check_list_all: [],
+
+    // rwd
+    windowWidth: null,
   }),
+
   methods: {
     next(index, answer) {
       this.testing[index].your_answer = answer;
@@ -246,6 +311,7 @@ export default {
       this.generateTesting();
       this.active = 0;
       this.dialog = false;
+      this.dialogAll = false;
     },
 
     getRandomInt(num, len) {
@@ -265,9 +331,22 @@ export default {
       }
       return array;
     },
+
+    onResize() {
+      this.windowWidth = window.innerWidth;
+    },
   },
+
   created() {
     this.generateTesting();
+  },
+  mounted() {
+    this.$nextTick(() => {
+      window.addEventListener("resize", this.onResize);
+    });
+  },
+  beforeDestroy() {
+    window.removeEventListener("resize", this.onResize);
   },
 };
 </script>
